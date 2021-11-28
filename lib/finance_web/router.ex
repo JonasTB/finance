@@ -1,8 +1,14 @@
 defmodule FinanceWeb.Router do
   use FinanceWeb, :router
 
+  import Plug.BasicAuth
+
   pipeline :api do
     plug :accepts, ["json"]
+  end
+
+  pipeline :auth do
+    plug :basic_auth, Application.compile_env(:finance, :basic_auth)
   end
 
   scope "/api", FinanceWeb do
@@ -11,10 +17,16 @@ defmodule FinanceWeb.Router do
     get "/:filename", WelcomeController, :index
 
     post "/users", UsersController, :create
+  end
+
+  scope "/api", FinanceWeb do
+    pipe_through [:api, :auth]
 
     post "/accounts/:id/deposit", AccountsController, :deposit
 
-    post "/accounts/:ida/withdraw", AccountsController, :withdraw
+    post "/accounts/:id/withdraw", AccountsController, :withdraw
+
+    post "/accounts/transaction", AccountsController, :transaction
   end
 
   # Enables LiveDashboard only for development
